@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow:   #FFD60A;
+    --coral:    #FF6B6B;
+    --mint:     #06D6A0;
+    --sky:      #118AB2;
+    --purple:   #845EC2;
+    --orange:   #FF9A3C;
+    --bg:       #0D1117;
+    --card:     #161B22;
+    --border:   #30363D;
+    --text:     #E6EDF3;
+    --muted:    #8B949E;
+    --codebg:   #0A0E13;
+    --green:    #3FB950;
+    --warn:     #D29922;
+    --red:      #F85149;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse at 15% 20%, rgba(255,214,10,.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 80%, rgba(6,214,160,.06) 0%, transparent 50%);
+    pointer-events:none; z-index:0;
+  }
+
+  .wrap {
+    position:relative; z-index:1;
+    max-width:860px;
+    margin:0 auto;
+    padding:0 20px 80px;
+  }
+
+  /* ── HEADER ── */
+  .header { text-align:center; padding:40px 0 24px; }
+  .header-icon {
+    font-size:2.8rem; display:block; margin-bottom:10px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100%{ transform:translateY(0); }
+    50%    { transform:translateY(-8px); }
+  }
+  .header h1 {
+    font-size:2.4rem; font-weight:900;
+    background: linear-gradient(120deg, var(--yellow), var(--coral), var(--mint));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom:6px;
+  }
+  .header p { color:var(--muted); font-size:1rem; }
+
+  /* ── PROGRESS ── */
+  .progress-bar-wrap {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:16px 24px;
+    margin-bottom:20px;
+    display:flex; align-items:center; gap:18px;
+  }
+  .pb-info { flex:1; }
+  .pb-label {
+    font-size:.82rem; color:var(--muted);
+    display:flex; justify-content:space-between;
+    margin-bottom:8px;
+  }
+  .pb-label strong { color:var(--yellow); font-size:.95rem; }
+  .pb-track { height:10px; background:rgba(255,255,255,.08); border-radius:99px; overflow:hidden; }
+  .pb-fill {
+    height:100%;
+    background:linear-gradient(90deg, var(--mint), var(--sky));
+    border-radius:99px;
+    transition:width .6s cubic-bezier(.34,1.56,.64,1);
+  }
+  .score-pill {
+    background:rgba(255,214,10,.1); border:1px solid rgba(255,214,10,.3);
+    border-radius:12px; padding:8px 18px;
+    text-align:center; min-width:72px;
+  }
+  .score-pill .num { font-size:1.6rem; font-weight:900; color:var(--yellow); display:block; }
+  .score-pill .lbl { font-size:.68rem; color:var(--muted); }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:20px; padding:32px;
+    position:relative; overflow:hidden;
+    animation: slideUp .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes slideUp {
+    from{ opacity:0; transform:translateY(30px) scale(.96); }
+    to  { opacity:1; transform:translateY(0)    scale(1);   }
+  }
+  .q-card::before {
+    content:''; position:absolute; top:0; right:0;
+    width:200px; height:200px;
+    background:radial-gradient(circle,rgba(255,214,10,.05) 0%,transparent 70%);
+    pointer-events:none;
+  }
+
+  .q-meta { display:flex; align-items:center; gap:10px; margin-bottom:22px; flex-wrap:wrap; }
+  .q-num {
+    background:linear-gradient(135deg,var(--yellow),var(--orange));
+    color:#000; font-size:.78rem; font-weight:800;
+    padding:5px 14px; border-radius:99px; white-space:nowrap;
+  }
+  .q-cat {
+    background:rgba(6,214,160,.1); border:1px solid rgba(6,214,160,.25);
+    color:var(--mint); font-size:.74rem;
+    padding:4px 12px; border-radius:99px;
+  }
+
+  .q-text {
+    font-size:1.08rem; font-weight:600; line-height:1.75;
+    color:var(--text);
+    border-left:3px solid var(--yellow);
+    padding-left:16px;
+    margin-bottom:22px;
+    white-space: pre-line;
+  }
+
+  /* ── ANSWER ── */
+  .ans-label { font-size:.82rem; font-weight:600; color:var(--muted); margin-bottom:8px; display:block; }
+  .ans-box {
+    width:100%; min-height:150px;
+    background:rgba(255,255,255,.04); border:2px solid var(--border);
+    border-radius:12px; padding:14px;
+    color:var(--text);
+    font-family:'Fira Code',monospace; font-size:.9rem; line-height:1.7;
+    resize:vertical; outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .ans-box:focus { border-color:var(--sky); box-shadow:0 0 0 3px rgba(17,138,178,.15); }
+  .ans-box:disabled { opacity:.6; cursor:default; }
+  .shortcut-hint { font-size:.72rem; color:var(--muted); margin-top:6px; }
+
+  /* ── BUTTONS ── */
+  .btn-row { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+  .btn {
+    padding:12px 22px; border-radius:12px;
+    font-family:'Outfit',sans-serif; font-size:.95rem; font-weight:700;
+    cursor:pointer; border:none;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    transition:all .2s;
+  }
+  .btn:active { transform:scale(.97); }
+
+  .btn-check  { background:linear-gradient(135deg,var(--yellow),var(--orange)); color:#000; flex:1; }
+  .btn-check:hover  { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 8px 24px rgba(255,214,10,.3); }
+  .btn-skip   { background:rgba(255,255,255,.06); color:var(--text); border:1px solid var(--border); }
+  .btn-skip:hover   { background:rgba(255,255,255,.1); }
+  .btn-override { background:linear-gradient(135deg,var(--purple),#C06DC8); color:#fff; flex:1; }
+  .btn-override:hover{ filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 8px 24px rgba(132,94,194,.3); }
+  .btn-next   { background:linear-gradient(135deg,var(--sky),var(--purple)); color:#fff; flex:1; }
+  .btn-next:hover   { filter:brightness(1.1); transform:translateY(-2px); }
+
+  /* ── RESULT PANEL ── */
+  .result-panel {
+    margin-top:24px; border-radius:16px; overflow:hidden;
+    display:none;
+    animation:expandIn .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes expandIn {
+    from{ opacity:0; transform:scaleY(.8); transform-origin:top; }
+    to  { opacity:1; transform:scaleY(1); }
+  }
+  .result-panel.high { border:1px solid rgba(6,214,160,.3);  background:rgba(6,214,160,.04); }
+  .result-panel.mid  { border:1px solid rgba(210,153,34,.3); background:rgba(210,153,34,.04); }
+  .result-panel.low  { border:1px solid rgba(248,81,73,.25); background:rgba(248,81,73,.04); }
+
+  .res-score-row {
+    padding:18px 24px; display:flex; align-items:center; gap:16px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .res-circle {
+    width:68px; height:68px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem; font-weight:900; flex-shrink:0;
+  }
+  .res-circle.high { background:linear-gradient(135deg,var(--green),var(--mint)); color:#000; }
+  .res-circle.mid  { background:linear-gradient(135deg,var(--warn),var(--orange)); color:#000; }
+  .res-circle.low  { background:linear-gradient(135deg,var(--red),var(--coral)); color:#fff; }
+  .res-text h3 { font-size:1rem; font-weight:800; margin-bottom:4px; }
+  .res-text p  { font-size:.8rem; color:var(--muted); line-height:1.5; }
+
+  .kw-section {
+    padding:14px 24px; background:rgba(6,214,160,.05);
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .kw-section h4 { font-size:.82rem; color:var(--mint); font-weight:600; margin-bottom:8px; }
+  .kw-tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .kw {
+    font-family:'Fira Code',monospace; font-size:.7rem;
+    padding:3px 10px; border-radius:6px;
+  }
+  .kw.ok { background:rgba(6,214,160,.15); border:1px solid rgba(6,214,160,.3); color:var(--mint); }
+  .kw.no { background:rgba(248,81,73,.1);  border:1px solid rgba(248,81,73,.25); color:var(--red);
+            text-decoration:line-through; opacity:.7; }
+
+  .model-section { padding:18px 24px; }
+  .model-section h4 { font-size:.85rem; color:var(--sky); font-weight:700; margin-bottom:10px; }
+  .model-code {
+    background:var(--codebg); border:1px solid var(--border); border-radius:10px;
+    padding:16px;
+    font-family:'Fira Code',monospace; font-size:.82rem; color:#A8DAFF;
+    overflow-x:auto; white-space:pre-wrap; line-height:1.8;
+  }
+
+  .nav-row { display:none; gap:10px; margin-top:14px; }
+
+  /* ── FINAL ── */
+  .final { display:none; animation:slideUp .5s cubic-bezier(.34,1.56,.64,1); }
+  .final-hero {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:24px; padding:50px 30px 40px;
+    text-align:center; position:relative; overflow:hidden; margin-bottom:24px;
+  }
+  .final-hero::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse at center,rgba(255,214,10,.07) 0%,transparent 65%);
+    pointer-events:none;
+  }
+  .trophy {
+    font-size:5rem; display:block; margin-bottom:14px;
+    animation:bounceIn .6s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes bounceIn {
+    from{ transform:scale(0) rotate(-30deg); opacity:0; }
+    to  { transform:scale(1) rotate(0);      opacity:1; }
+  }
+  .final-hero h2 {
+    font-size:2.4rem; font-weight:900;
+    background:linear-gradient(120deg,var(--yellow),var(--coral),var(--mint));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text; margin-bottom:8px;
+  }
+  .final-hero p { color:var(--muted); font-size:1rem; }
+  .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:30px; }
+  .stat {
+    background:rgba(255,255,255,.04); border:1px solid var(--border);
+    border-radius:16px; padding:18px; text-align:center;
+  }
+  .stat .n { font-size:2.2rem; font-weight:900; display:block; margin-bottom:4px; }
+  .stat .l { font-size:.75rem; color:var(--muted); }
+  .stat.g .n { color:var(--green); }
+  .stat.r .n { color:var(--red);   }
+  .stat.y .n { color:var(--yellow);}
+
+  .review-section h2 {
+    font-size:1.2rem; font-weight:800; color:var(--coral);
+    margin-bottom:14px; display:flex; align-items:center; gap:8px;
+  }
+  .review-item {
+    background:var(--card); border:1px solid rgba(248,81,73,.2);
+    border-radius:14px; padding:18px 22px; margin-bottom:12px;
+  }
+  .ri-num  { font-size:.82rem; color:var(--coral); font-weight:700; margin-bottom:4px; }
+  .ri-text { font-size:.85rem; color:var(--muted); margin-bottom:12px; line-height:1.5; white-space:pre-line; }
+  .ri-lbl  { font-size:.74rem; color:var(--mint); font-weight:600; margin-bottom:6px; }
+
+  .restart-row { text-align:center; margin-top:20px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position:fixed; bottom:28px; left:50%;
+    transform:translateX(-50%) translateY(80px);
+    background:var(--card); border:1px solid var(--border);
+    border-radius:12px; padding:12px 24px;
+    font-size:.9rem; font-weight:600; z-index:999;
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+    white-space:nowrap;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  .reset-link {
+    display:inline-block; font-size:.8rem; color:var(--muted);
+    cursor:pointer; margin-top:10px;
+    background:none; border:none; font-family:inherit;
+    transition:color .2s;
+  }
+  .reset-link:hover { color:var(--coral); }
+
+  @media(max-width:600px){
+    .header h1  { font-size:1.7rem; }
+    .q-card     { padding:22px 16px; }
+    .stats-grid { grid-template-columns:1fr 1fr; }
+    .stats-grid .stat:last-child { grid-column:1/-1; }
+    .btn-row, .nav-row { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <span class="header-icon">🗄️</span>
+    <h1>Database Quiz</h1>
+    <p>Write your SQL answer, then check it against the model answer</p>
+    <button class="reset-link" onclick="confirmReset()">↺ Reset progress</button>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar-wrap">
+    <div class="pb-info">
+      <div class="pb-label">
+        <span>Progress</span>
+        <strong id="pbText">0 / 17</strong>
+      </div>
+      <div class="pb-track">
+        <div class="pb-fill" id="pbFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="score-pill">
+      <span class="num" id="scoreNum">0</span>
+      <span class="lbl">score</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quizArea">
+    <div class="q-card" id="qCard">
+
+      <div class="q-meta">
+        <span class="q-num" id="qNum">Q1 / 17</span>
+        <span class="q-cat" id="qCat"></span>
+      </div>
+
+      <div class="q-text" id="qText"></div>
+
+      <label class="ans-label">✏️ Your Answer (SQL):</label>
+      <textarea class="ans-box" id="ansBox" placeholder="Write your SQL here..."></textarea>
+      <div class="shortcut-hint">Tip: Ctrl + Enter to check</div>
+
+      <div class="btn-row">
+        <button class="btn btn-check" id="checkBtn" onclick="checkAnswer()">🔍 Check Answer</button>
+        <button class="btn btn-skip"  onclick="skipQuestion()">Skip ⏭</button>
+      </div>
+
+      <!-- RESULT -->
+      <div class="result-panel" id="resultPanel">
+        <div class="res-score-row">
+          <div class="res-circle" id="resCircle"></div>
+          <div class="res-text">
+            <h3 id="resTitle"></h3>
+            <p  id="resDesc"></p>
+          </div>
+        </div>
+        <div class="kw-section">
+          <h4>🔑 Keywords:</h4>
+          <div class="kw-tags" id="kwTags"></div>
+        </div>
+        <div class="model-section">
+          <h4>📖 Model Answer:</h4>
+          <div class="model-code" id="modelCode"></div>
+        </div>
+      </div>
+
+      <!-- NAV ROW -->
+      <div class="nav-row" id="navRow">
+        <button class="btn btn-override" id="overrideBtn" onclick="overrideScore()">✅ Mark as Correct</button>
+        <button class="btn btn-next"     onclick="nextQuestion()">Next ▶</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FINAL SCREEN -->
+  <div class="final" id="finalScreen">
+    <div class="final-hero">
+      <span class="trophy" id="trophyIcon">🏆</span>
+      <h2 id="finalTitle">Well done!</h2>
+      <p  id="finalSub">You completed all questions.</p>
+      <div class="stats-grid">
+        <div class="stat g"><span class="n" id="fCorrect">0</span><span class="l">✅ Correct</span></div>
+        <div class="stat r"><span class="n" id="fWrong">0</span><span class="l">❌ Need review</span></div>
+        <div class="stat y"><span class="n" id="fPct">0%</span><span class="l">📊 Score</span></div>
+      </div>
+    </div>
+
+    <div class="review-section">
+      <h2>📚 Questions to Review:</h2>
+      <div id="reviewList"></div>
+    </div>
+
+    <div class="restart-row">
+      <button class="btn btn-next" style="display:inline-flex;padding:14px 40px;font-size:1rem;" onclick="restartQuiz()">
+        🔄 Restart Quiz
+      </button>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+const Qs = [
+  {
+    num:"Q1", cat:"DDL — CREATE & INSERT",
+    text:"Create a table called Departments with the following columns:\n• id\n• name\nInsert suitable data into the table.",
+    model:
+`CREATE TABLE Departments (
+    id   INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL
+);
+
+INSERT INTO Departments (id, name) VALUES
+(1, 'Computer Science'),
+(2, 'Mathematics'),
+(3, 'Physics'),
+(4, 'Engineering');`,
+    kw:["CREATE","TABLE","Departments","id","INT","PRIMARY","KEY","name","VARCHAR","INSERT","INTO","VALUES"]
+  },
+  {
+    num:"Q2", cat:"DDL — CREATE & FOREIGN KEY",
+    text:"Create a table called Students with the following columns:\n• id\n• first_name\n• last_name\n• age\n• grade\n• department_id\nLink this table to Departments using a FOREIGN KEY.\nInsert suitable data into the table.",
+    model:
+`CREATE TABLE Students (
+    id            INT PRIMARY KEY AUTO_INCREMENT,
+    first_name    VARCHAR(50) NOT NULL,
+    last_name     VARCHAR(50) NOT NULL,
+    age           INT,
+    grade         DECIMAL(5,2),
+    department_id INT,
+    FOREIGN KEY (department_id) REFERENCES Departments(id)
+);
+
+INSERT INTO Students (first_name, last_name, age, grade, department_id) VALUES
+('Ahmed',  'Ali',    21, 88,  1),
+('Sara',   'Hassan', 22, 75,  2),
+('Ali',    'Omar',   20, 91,  1),
+('Nour',   'Salem',  23, 65,  3),
+('Maya',   'Karim',  21, 84,  4),
+('Amr',    'Fathy',  22, 78,  2),
+('Layla',  'Nasser', 20, 55,  3),
+('Ahmed',  'Samir',  21, 82,  1);`,
+    kw:["CREATE","TABLE","Students","id","first_name","last_name","age","grade","department_id","FOREIGN","KEY","REFERENCES","Departments","INSERT","INTO","VALUES","PRIMARY","VARCHAR","INT"]
+  },
+  {
+    num:"Q3 — 1", cat:"SELECT — All columns",
+    text:"Display all students.",
+    model:`SELECT * FROM Students;`,
+    kw:["SELECT","*","FROM","Students"]
+  },
+  {
+    num:"Q3 — 2", cat:"SELECT — Specific columns",
+    text:"Display only first_name and grade.",
+    model:`SELECT first_name, grade\nFROM Students;`,
+    kw:["SELECT","first_name","grade","FROM","Students"]
+  },
+  {
+    num:"Q3 — 3", cat:"SELECT — WHERE",
+    text:"Display students with grade greater than 80.",
+    model:`SELECT *\nFROM Students\nWHERE grade > 80;`,
+    kw:["SELECT","FROM","Students","WHERE","grade","80",">"]
+  },
+  {
+    num:"Q3 — 4", cat:"SELECT — BETWEEN",
+    text:"Display students whose age is between 20 and 22.",
+    model:`SELECT *\nFROM Students\nWHERE age BETWEEN 20 AND 22;`,
+    kw:["SELECT","FROM","Students","WHERE","age","BETWEEN","20","22","AND"]
+  },
+  {
+    num:"Q3 — 5", cat:"SELECT — LIKE",
+    text:"Display students whose first_name starts with 'A'.",
+    model:`SELECT *\nFROM Students\nWHERE first_name LIKE 'A%';`,
+    kw:["SELECT","FROM","Students","WHERE","first_name","LIKE","A%"]
+  },
+  {
+    num:"Q3 — 6", cat:"SELECT — ORDER BY",
+    text:"Display students ordered by grade descending.",
+    model:`SELECT *\nFROM Students\nORDER BY grade DESC;`,
+    kw:["SELECT","FROM","Students","ORDER","BY","grade","DESC"]
+  },
+  {
+    num:"Q3 — 7", cat:"Aggregate — AVG",
+    text:"Find the average grade of all students.",
+    model:`SELECT AVG(grade) AS average_grade\nFROM Students;`,
+    kw:["SELECT","AVG","grade","FROM","Students"]
+  },
+  {
+    num:"Q3 — 8", cat:"Aggregate — MAX",
+    text:"Find the highest grade.",
+    model:`SELECT MAX(grade) AS highest_grade\nFROM Students;`,
+    kw:["SELECT","MAX","grade","FROM","Students"]
+  },
+  {
+    num:"Q3 — 9", cat:"Aggregate — COUNT",
+    text:"Count the total number of students.",
+    model:`SELECT COUNT(*) AS total_students\nFROM Students;`,
+    kw:["SELECT","COUNT","FROM","Students"]
+  },
+  {
+    num:"Q3 — 10", cat:"GROUP BY — COUNT",
+    text:"Show number of students in each department.",
+    model:`SELECT department_id, COUNT(*) AS num_students\nFROM Students\nGROUP BY department_id;`,
+    kw:["SELECT","department_id","COUNT","FROM","Students","GROUP","BY"]
+  },
+  {
+    num:"Q3 — 11", cat:"GROUP BY — HAVING",
+    text:"Show departments where average grade is greater than 80.",
+    model:`SELECT department_id, AVG(grade) AS avg_grade\nFROM Students\nGROUP BY department_id\nHAVING AVG(grade) > 80;`,
+    kw:["SELECT","department_id","AVG","grade","FROM","Students","GROUP","BY","HAVING","80"]
+  },
+  {
+    num:"Q3 — 12", cat:"String — CONCAT",
+    text:"Display full name using CONCAT.",
+    model:`SELECT CONCAT(first_name, ' ', last_name) AS full_name\nFROM Students;`,
+    kw:["SELECT","CONCAT","first_name","last_name","full_name","FROM","Students"]
+  },
+  {
+    num:"Q3 — 13", cat:"String — UPPER",
+    text:"Display first_name in uppercase.",
+    model:`SELECT UPPER(first_name) AS first_name_upper\nFROM Students;`,
+    kw:["SELECT","UPPER","first_name","FROM","Students"]
+  },
+  {
+    num:"Q3 — 14", cat:"String — LENGTH",
+    text:"Display length of first_name.",
+    model:`SELECT first_name, LENGTH(first_name) AS name_length\nFROM Students;`,
+    kw:["SELECT","first_name","LENGTH","FROM","Students"]
+  },
+  {
+    num:"Q3 — 15", cat:"Conditional — CASE WHEN",
+    text:"Classify students using CASE:\n• grade >= 85  →  Excellent\n• grade >= 70  →  Good\n• else  →  Weak",
+    model:
+`SELECT
+    first_name,
+    grade,
+    CASE
+        WHEN grade >= 85 THEN 'Excellent'
+        WHEN grade >= 70 THEN 'Good'
+        ELSE 'Weak'
+    END AS performance
+FROM Students;`,
+    kw:["SELECT","first_name","grade","CASE","WHEN","THEN","Excellent","Good","Weak","ELSE","END","FROM","Students","85","70"]
+  }
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+const KEY = 'db_quiz_v2';
+let st = { idx:0, scores:{}, answered:{}, userAns:{} };
+
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} }
+function load(){
+  try{
+    const d = localStorage.getItem(KEY);
+    if(d){ const p=JSON.parse(d); st={...st,...p}; }
+  }catch(e){}
+}
+
+// ─────────────────────────────────────────────
+//  EVALUATE
+// ─────────────────────────────────────────────
+function evaluate(ua, q){
+  const u = ua.toUpperCase().replace(/[`'"]/g,'');
+  let found=[], missing=[];
+  q.kw.forEach(k=>{ (u.includes(k.toUpperCase())?found:missing).push(k); });
+  return { pct:Math.round(found.length/q.kw.length*100), found, missing };
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function render(idx){
+  const q = Qs[idx];
+  document.getElementById('qNum').textContent  = `${q.num} / ${Qs.length}`;
+  document.getElementById('qCat').textContent  = q.cat;
+  document.getElementById('qText').textContent = q.text;
+
+  const box = document.getElementById('ansBox');
+  box.value    = st.userAns[idx] || '';
+  box.disabled = !!st.answered[idx];
+
+  const rp  = document.getElementById('resultPanel');
+  const nav = document.getElementById('navRow');
+  const chk = document.getElementById('checkBtn');
+  const ovr = document.getElementById('overrideBtn');
+
+  if(st.answered[idx]){
+    showResult(idx, st.userAns[idx]||'');
+    rp.style.display  = 'block';
+    nav.style.display = 'flex';
+    chk.style.display = 'none';
+    ovr.style.display = (st.scores[idx]===true) ? 'none' : 'inline-flex';
+  } else {
+    rp.style.display  = 'none';
+    nav.style.display = 'none';
+    chk.style.display = 'flex';
+  }
+  updateProgress();
+}
+
+function showResult(idx, ua){
+  const q = Qs[idx];
+  const {pct} = evaluate(ua, q);
+  const eff   = (st.scores[idx]===true) ? 100 : pct;
+
+  let cls, title, desc;
+  if(eff>=75){ cls='high'; title=`Great! ${eff}% match`;      desc='Your answer covers most key elements.'; }
+  else if(eff>=40){ cls='mid'; title=`Almost! ${eff}% match`; desc='Check the model answer for what you missed.'; }
+  else { cls='low'; title=`Needs review — ${eff}%`;           desc='Study the model answer carefully.'; }
+
+  const panel = document.getElementById('resultPanel');
+  panel.className   = `result-panel ${cls}`;
+  panel.style.display = 'block';
+
+  const circ = document.getElementById('resCircle');
+  circ.className   = `res-circle ${cls}`;
+  circ.textContent = `${eff}%`;
+  document.getElementById('resTitle').textContent = title;
+  document.getElementById('resDesc').textContent  = desc;
+
+  const tags = document.getElementById('kwTags');
+  tags.innerHTML = '';
+  q.kw.forEach(k=>{
+    const match = ua.toUpperCase().includes(k.toUpperCase());
+    const sp = document.createElement('span');
+    sp.className   = `kw ${match?'ok':'no'}`;
+    sp.textContent = k;
+    tags.appendChild(sp);
+  });
+
+  document.getElementById('modelCode').textContent = q.model;
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+function checkAnswer(){
+  const idx = st.idx;
+  const ua  = document.getElementById('ansBox').value.trim();
+  if(!ua){ toast('⚠️ Please write your answer first'); return; }
+
+  const {pct} = evaluate(ua, Qs[idx]);
+  st.answered[idx] = true;
+  st.scores[idx]   = pct >= 60;
+  st.userAns[idx]  = ua;
+  save();
+
+  document.getElementById('ansBox').disabled       = true;
+  document.getElementById('checkBtn').style.display = 'none';
+  showResult(idx, ua);
+  document.getElementById('resultPanel').style.display = 'block';
+  document.getElementById('navRow').style.display      = 'flex';
+  document.getElementById('overrideBtn').style.display = st.scores[idx] ? 'none' : 'inline-flex';
+
+  updateProgress();
+  toast(st.scores[idx] ? '🌟 Correct!' : '📖 Check the model answer');
+  setTimeout(()=>{ document.getElementById('resultPanel').scrollIntoView({behavior:'smooth',block:'nearest'}); },100);
+}
+
+function overrideScore(){
+  const idx = st.idx;
+  st.scores[idx] = true;
+  save(); updateProgress();
+  document.getElementById('overrideBtn').style.display  = 'none';
+  document.getElementById('resCircle').className        = 'res-circle high';
+  document.getElementById('resCircle').textContent      = '100%';
+  document.getElementById('resTitle').textContent       = 'Marked as correct ✅';
+  document.getElementById('resultPanel').className      = 'result-panel high';
+  toast('✅ Point added!');
+}
+
+function skipQuestion(){
+  const idx = st.idx;
+  if(!st.answered[idx]){
+    st.answered[idx] = true;
+    st.scores[idx]   = false;
+    st.userAns[idx]  = '';
+    save(); updateProgress();
+  }
+  nextQuestion();
+}
+
+function nextQuestion(){
+  const next = st.idx + 1;
+  if(next >= Qs.length){ showFinal(); return; }
+  st.idx = next; save();
+
+  const card = document.getElementById('qCard');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'slideUp .4s cubic-bezier(.34,1.56,.64,1)';
+
+  render(next);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─────────────────────────────────────────────
+//  PROGRESS
+// ─────────────────────────────────────────────
+function updateProgress(){
+  const total   = Qs.length;
+  const done    = Object.keys(st.answered).length;
+  const correct = Object.values(st.scores).filter(v=>v===true).length;
+  document.getElementById('pbFill').style.width   = Math.round(done/total*100)+'%';
+  document.getElementById('pbText').textContent   = `${done} / ${total}`;
+  document.getElementById('scoreNum').textContent = correct;
+}
+
+// ─────────────────────────────────────────────
+//  FINAL SCREEN
+// ─────────────────────────────────────────────
+function showFinal(){
+  document.getElementById('quizArea').style.display = 'none';
+  const fs = document.getElementById('finalScreen');
+  fs.style.display = 'block';
+
+  const total   = Qs.length;
+  const correct = Object.values(st.scores).filter(v=>v===true).length;
+  const wrong   = total - correct;
+  const pct     = Math.round(correct/total*100);
+
+  document.getElementById('fCorrect').textContent = correct;
+  document.getElementById('fWrong').textContent   = wrong;
+  document.getElementById('fPct').textContent     = pct+'%';
+
+  let icon,title,sub;
+  if(pct>=85){ icon='🏆'; title='Excellent!';    sub='You have a strong grasp of SQL — keep it up!'; }
+  else if(pct>=60){ icon='🎯'; title='Good job!';sub='A few concepts to review, but solid overall.'; }
+  else { icon='📚'; title='Keep studying!';       sub='Review the questions you missed and try again.'; }
+
+  document.getElementById('trophyIcon').textContent = icon;
+  document.getElementById('finalTitle').textContent = title;
+  document.getElementById('finalSub').textContent   = sub;
+
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '';
+  const wrongs = Qs.filter((_,i)=>st.scores[i]!==true);
+
+  if(!wrongs.length){
+    list.innerHTML = '<div style="text-align:center;padding:28px;color:var(--mint);font-size:1.05rem;font-weight:700">🌟 Perfect — no questions to review!</div>';
+  } else {
+    wrongs.forEach(q=>{
+      const d = document.createElement('div');
+      d.className = 'review-item';
+      d.innerHTML = `
+        <div class="ri-num">${q.num} — ${q.cat}</div>
+        <div class="ri-text">${esc(q.text)}</div>
+        <div class="ri-lbl">📖 Model Answer:</div>
+        <div style="font-family:'Fira Code',monospace;font-size:.78rem;color:#A8DAFF;background:var(--codebg);border:1px solid var(--border);border-radius:8px;padding:12px;overflow-x:auto;white-space:pre-wrap;margin-top:6px;line-height:1.7;">${esc(q.model)}</div>
+      `;
+      list.appendChild(d);
+    });
+  }
+  fs.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ─────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+function confirmReset(){ if(confirm('Reset all progress and start over?')) restartQuiz(); }
+
+function restartQuiz(){
+  st = {idx:0, scores:{}, answered:{}, userAns:{}};
+  save();
+  document.getElementById('finalScreen').style.display  = 'none';
+  document.getElementById('quizArea').style.display     = 'block';
+  document.getElementById('ansBox').disabled            = false;
+  document.getElementById('checkBtn').style.display     = 'flex';
+  render(0);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  load();
+  if(Object.keys(st.answered).length >= Qs.length && st.idx >= Qs.length){
+    document.getElementById('quizArea').style.display = 'none';
+    showFinal();
+  } else {
+    render(st.idx);
+  }
+  document.getElementById('ansBox').addEventListener('keydown', e=>{
+    if(e.ctrlKey && e.key==='Enter'){
+      const b = document.getElementById('checkBtn');
+      if(b.style.display !== 'none') checkAnswer();
+    }
+  });
+});
+</script>
+</body>
+</html>
